@@ -9,6 +9,7 @@ DEBUG = False
 TMPL_WIN = "/etc/huayra/grub/windows.tmpl"
 TMPL_RECU = "/etc/huayra/grub/recuperacion.tmpl"
 
+
 if not os.path.isfile(TMPL_WIN):
     TMPL_WIN = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                             "tmpl/windows.tmpl")
@@ -16,6 +17,10 @@ if not os.path.isfile(TMPL_WIN):
 if not os.path.isfile(TMPL_RECU):
     TMPL_RECU = os.path.join(os.path.abspath(os.path.dirname(__file__)),
                              "tmpl/recuperacion.tmpl")
+
+
+def is_uid0(uid):
+    return (DEBUG or int(uid) == 0)
 
 
 def linux_boot_prober(partition, kernel_icontains=''):
@@ -124,7 +129,7 @@ def filter_blkid(blkid=None, key='', value=''):
     return data
 
 
-def gen_template(tmpl_name="", blkid=None, linux_boot_prober=None):
+def gen_template(tmpl_name="", blkid=None, linux_boot_prober=None, env=None):
     """
     genera templates para grub
     params: str, str, str, str
@@ -134,18 +139,23 @@ def gen_template(tmpl_name="", blkid=None, linux_boot_prober=None):
     tmpl = ""
     if tmpl_name and blkid:
         if len(blkid):
+            blkid.update({'OPENBRACKET':'{', 'CLOSEBRACKET':'}'})
             if linux_boot_prober:
                 if type(linux_boot_prober) == type([]):
                     linux_boot_prober = linux_boot_prober[0]
                 blkid.update(linux_boot_prober)
+
+            blkid.update({'savedefault':''})
+            if env:
+                if u"x{}".format(unicode(env.get('GRUB_DEFAULT', False)).lower()) in [u"xtrue",  u"x1"] and \
+                   u"x{}".format(unicode(env.get('GRUB_SAVEDEFAULT', False)).lower()) == u"xtrue":
+                    blkid['savedefault'] = 'savedefault\n'
 
             tmpl_file = open(tmpl_name, 'r')
             tmpl = ''.join(tmpl_file.readlines())
             tmpl_file.close()
 
             tmpl = tmpl.format(**blkid)
-            tmpl = tmpl.replace('OPENBRACKET', '{')
-            tmpl = tmpl.replace('CLOSEBRACKET', '}')
 
     return tmpl
 
@@ -164,13 +174,13 @@ def main():
     blkid_recu = filter_blkid(blkid_output, 'label', 'RECUPERACION')
     lbp_recu = lbp_to_dict(linux_boot_prober(blkid_recu.get('root'), '/boot/vmlinuz'))
 
-    tmpl_win = gen_template(TMPL_WIN, blkid_win)
-    tmpl_recu = gen_template(TMPL_RECU, blkid_recu, lbp_recu)
+    tmpl_win = gen_template(TMPL_WIN, blkid_win, os.environ)
+    tmpl_recu = gen_template(TMPL_RECU, blkid_recu, lbp_recu, os.environ)
 
     print tmpl_win
     print tmpl_recu
 
 
 if __name__ == "__main__":
-    if os.getuid() == 0:
+    if is_uid0(os.getuid()):
         main()
