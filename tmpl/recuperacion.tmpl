@@ -1,9 +1,8 @@
-menuentry "Sistema de Recuperación" --class recovery --class gnu-linux --class gnu --class os OPENBRACKET
-	savedefault
-	insmod part_gpt
+menuentry "Sistema de Recuperación" --class recovery --class gnu-linux --class gnu --class os {OPENBRACKET}
+	{savedefault}insmod part_gpt
 	insmod ext2
 	set root='(/dev/sda,{gpt})'
 	search --no-floppy --fs-uuid --set=root {uuid}
 	linux {kernel} {kparams}
 	initrd {initrd}
-CLOSEBRACKET
+{CLOSEBRACKET}
