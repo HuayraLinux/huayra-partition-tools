@@ -147,9 +147,8 @@ def gen_template(tmpl_name="", blkid=None, linux_boot_prober=None, env=None):
 
             blkid.update({'savedefault':''})
             if env:
-                if u"x{}".format(unicode(env.get('GRUB_DEFAULT', False)).lower()) in [u"xtrue",  u"x1"] and \
-                   u"x{}".format(unicode(env.get('GRUB_SAVEDEFAULT', False)).lower()) == u"xtrue":
-                    blkid['savedefault'] = 'savedefault\n'
+                if u"x{}".format(unicode(env.get('GRUB_SAVEDEFAULT', False)).lower()) == u"xtrue":
+                    blkid['savedefault'] = 'savedefault\n\t'
 
             tmpl_file = open(tmpl_name, 'r')
             tmpl = ''.join(tmpl_file.readlines())
@@ -174,8 +173,8 @@ def main():
     blkid_recu = filter_blkid(blkid_output, 'label', 'RECUPERACION')
     lbp_recu = lbp_to_dict(linux_boot_prober(blkid_recu.get('root'), '/boot/vmlinuz'))
 
-    tmpl_win = gen_template(TMPL_WIN, blkid_win, os.environ)
-    tmpl_recu = gen_template(TMPL_RECU, blkid_recu, lbp_recu, os.environ)
+    tmpl_win = gen_template(TMPL_WIN, blkid_win, env=os.environ)
+    tmpl_recu = gen_template(TMPL_RECU, blkid_recu, lbp_recu, env=os.environ)
 
     print tmpl_win
     print tmpl_recu
