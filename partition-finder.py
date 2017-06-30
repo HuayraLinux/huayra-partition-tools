@@ -174,10 +174,10 @@ def main():
     lbp_recu = lbp_to_dict(linux_boot_prober(blkid_recu.get('root'), '/boot/vmlinuz'))
 
     tmpl_win = gen_template(TMPL_WIN, blkid_win, env=os.environ)
-    tmpl_recu = gen_template(TMPL_RECU, blkid_recu, lbp_recu, env=os.environ)
-
     print tmpl_win
-    print tmpl_recu
+    if 'kernel' in lbp_recu:
+        tmpl_recu = gen_template(TMPL_RECU, blkid_recu, lbp_recu, env=os.environ)
+        print tmpl_recu
 
 
 if __name__ == "__main__":
